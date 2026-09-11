@@ -4,6 +4,53 @@ Internal Mini ERP + CRM Operations Portal for a wholesale/distribution company.
 
 The backend uses Node.js, TypeScript, Express, PostgreSQL through `pg`, JWT, bcrypt, dotenv, and Zod. No ORM is used.
 
+## Production deployment
+
+The repository includes a Render blueprint at `render.yaml` for the backend and a
+Vercel SPA rewrite at `frontend/vercel.json`.
+
+### 1. Provision PostgreSQL
+
+Create a managed PostgreSQL database on Render or another provider. Apply the
+SQL in `database/schema.sql` followed by the seed/admin SQL documented in the
+database setup instructions. Keep the database credentials private.
+
+### 2. Deploy the backend on Render
+
+Create the service from this repository using `render.yaml`, or configure a
+Node web service manually:
+
+```text
+Root directory: backend
+Build command: npm ci && npm run build
+Start command: npm start
+Health check: /api/health
+```
+
+Set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_SSL=true`,
+`JWT_SECRET`, `JWT_EXPIRES_IN`, and `CORS_ORIGIN`. `CORS_ORIGIN` should be the
+final Vercel URL, without a trailing slash. Use a newly generated production
+`JWT_SECRET` and change the development admin password before launch.
+
+### 3. Deploy the frontend on Vercel
+
+Import the repository and set the project root to `frontend`. Vercel detects
+Vite automatically. Define:
+
+```text
+VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api
+```
+
+The included `frontend/vercel.json` keeps React Router routes working on direct
+loads and refreshes.
+
+### 4. Verify the deployed services
+
+Check the backend health endpoint, then sign in through the Vercel URL and
+verify dashboard loading, role navigation, products, inventory, customers,
+follow-ups, challans, and toast notifications. Do not use the local
+development credentials in production.
+
 ## Products and inventory APIs
 
 All product and inventory endpoints require `Authorization: Bearer <token>`.

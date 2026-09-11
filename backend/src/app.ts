@@ -16,7 +16,14 @@ dotenv.config();
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+const allowedOrigins = process.env.CORS_ORIGIN
+  ?.split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin: allowedOrigins?.length ? allowedOrigins : true,
+}));
 app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/customers', customerRouter);
@@ -67,4 +74,3 @@ app.use((error: Error, _request: Request, response: Response, _next: NextFunctio
 });
 
 export default app;
-
