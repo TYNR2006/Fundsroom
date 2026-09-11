@@ -1,7 +1,9 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { erpApi, type ManagedUser } from '../api/erp';
+import { useToast } from '../context/ToastContext';
 
 export default function UsersPage() {
+  const toast = useToast();
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'SALES' as ManagedUser['role'] });
   const [message, setMessage] = useState('');
@@ -10,8 +12,8 @@ export default function UsersPage() {
   useEffect(() => { load(); }, []);
   async function submit(event: FormEvent) {
     event.preventDefault(); setError(''); setMessage('');
-    try { await erpApi.users.create(form); setForm({ name: '', email: '', password: '', role: 'SALES' }); setMessage('User created successfully.'); load(); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Unable to create user.'); }
+    try { await erpApi.users.create(form); setForm({ name: '', email: '', password: '', role: 'SALES' }); setMessage('User created successfully.'); toast.success('User created successfully.'); load(); }
+    catch (e) { const message = e instanceof Error ? e.message : 'Unable to create user.'; setError(message); toast.error(message); }
   }
   return <div className="page"><div className="page-intro"><div><p className="eyebrow">ADMINISTRATION</p><h1>Users</h1><p className="muted">Create internal users and assign operational roles.</p></div></div>
     <div className="dashboard-grid"><form className="panel stack" onSubmit={submit}><h3>Create user</h3>{error && <div className="alert">{error}</div>}{message && <div className="alert" style={{ color: '#15803d' }}>{message}</div>}

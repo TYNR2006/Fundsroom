@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import * as authApi from '../api/auth';
 import { getApiToken, setApiToken, setUnauthorizedHandler } from '../api/client';
 import type { User } from '../types/auth';
+import { useToast } from './ToastContext';
 
 type AuthContextValue = {
   user: User | null;
@@ -15,6 +16,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const toast = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(getApiToken());
   const [loading, setLoading] = useState(Boolean(token));
@@ -58,16 +60,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   async function login(email: string, password: string): Promise<void> {
-    const result = await authApi.login(email, password);
-    setApiToken(result.token);
-    setToken(result.token);
-    setUser(result.user);
+    try {
+      const result = await authApi.login(email, password);
+      setApiToken(result.token);
+      setToken(result.token);
+      setUser(result.user);
+      toast.success('Signed in successfully.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to sign in.');
+      throw error;
+    }
   }
 
   function logout(): void {
     setApiToken(null);
     setToken(null);
     setUser(null);
+    toast.success('You have been signed out.');
   }
 
   const value = useMemo(

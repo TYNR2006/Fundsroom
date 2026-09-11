@@ -60,3 +60,7 @@ The summary reports customer totals by `LEAD`, `ACTIVE`, and `INACTIVE`, product
 The inventory endpoint includes low-stock products ordered by largest threshold gap and a separate out-of-stock list. The challan endpoint includes the latest ten challans. Activity combines recent stock movements, challan creation, and follow-up activity, limited to twenty records. Activity accepts optional parameterized `from` and `to` filters in `YYYY-MM-DD` format.
 
 Dashboard values are calculated with PostgreSQL `COUNT`, `SUM`, filtered aggregates, joins, and bounded ordered queries. No dashboard endpoint inserts, updates, or deletes data, and no dashboard-specific tables are used.
+
+## Admin user management
+
+GET /api/users and POST /api/users require an authenticated ADMIN. POST accepts { name, email, password, role }; passwords are bcrypt-hashed and duplicate emails return 409. User creation does not alter operational created_by relationships or history.
