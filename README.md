@@ -4,6 +4,9 @@ Internal Mini ERP + CRM Operations Portal for a wholesale/distribution company.
 
 The backend uses Node.js, TypeScript, Express, PostgreSQL through `pg`, JWT, bcrypt, dotenv, and Zod. No ORM is used.
 
+For the human-readable company handoff, see
+[`docs/FUNDSROOM_PROJECT_DOCUMENTATION.md`](docs/FUNDSROOM_PROJECT_DOCUMENTATION.md).
+
 ## Production deployment
 
 The repository includes a Render blueprint at `render.yaml` for the backend and a
