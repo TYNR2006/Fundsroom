@@ -224,6 +224,98 @@ export async function updateChallan(id: number, input: ChallanInput) {
   }
 }
 
+export async function cancelChallan(id: number, cancelledBy: number, role: string) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await client.query<{
+      id: number;
+      status: string;
+      challan_number: string;
+    }>(
+      `SELECT id, status, challan_number
+       FROM sales_challans
+       WHERE id = $1
+       FOR UPDATE`,
+      [id],
+    );
+    const challan = result.rows[0];
+    if (!challan) {
+      await client.query('ROLLBACK');
+      return { kind: 'challan_not_found' as const };
+    }
+    if (challan.status === 'CANCELLED') {
+      await client.query('ROLLBACK');
+      return { kind: 'already_cancelled' as const };
+    }
+    if (challan.status !== 'DRAFT' && challan.status !== 'CONFIRMED') {
+      await client.query('ROLLBACK');
+      return { kind: 'invalid_state' as const, status: challan.status };
+    }
+    if (challan.status === 'CONFIRMED' && role !== 'ADMIN') {
+      await client.query('ROLLBACK');
+      return { kind: 'forbidden_confirmed' as const };
+    }
+    if (challan.status === 'CONFIRMED') {
+      const items = await client.query<{ product_id: number; quantity: number }>(
+        `SELECT product_id, quantity
+         FROM sales_challan_items
+         WHERE challan_id = $1
+         ORDER BY product_id
+         FOR UPDATE`,
+        [id],
+      );
+      const productIds = items.rows.map((item) => item.product_id);
+      const products = await client.query<{ id: number }>(
+        `SELECT id FROM products
+         WHERE id = ANY($1::INTEGER[])
+         ORDER BY id
+         FOR UPDATE`,
+        [productIds],
+      );
+      const foundIds = new Set(products.rows.map((product) => product.id));
+      const missingId = productIds.find((productId) => !foundIds.has(productId));
+      if (missingId) {
+        await client.query('ROLLBACK');
+        return { kind: 'product_not_found' as const, productId: missingId };
+      }
+      for (const item of items.rows) {
+        await client.query(
+          `UPDATE products
+           SET current_stock = current_stock + $1, updated_at = CURRENT_TIMESTAMP
+           WHERE id = $2`,
+          [item.quantity, item.product_id],
+        );
+        await client.query(
+          `INSERT INTO stock_movements
+            (product_id, quantity_changed, movement_type, reason, created_by)
+           VALUES ($1, $2, 'IN', $3, $4)`,
+          [
+            item.product_id,
+            item.quantity,
+            `Challan cancellation: ${challan.challan_number}`,
+            cancelledBy,
+          ],
+        );
+      }
+    }
+    const updated = await client.query(
+      `UPDATE sales_challans
+       SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+       RETURNING *`,
+      [id],
+    );
+    await client.query('COMMIT');
+    return { kind: 'success' as const, challan: updated.rows[0] };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function confirmChallan(id: number, confirmedBy: number) {
   const client = await pool.connect();
   try {
@@ -241,6 +333,7 @@ export async function confirmChallan(id: number, confirmedBy: number) {
       await client.query('ROLLBACK');
       return { kind: 'challan_not_found' as const };
     }
+
     if (challan.status !== 'DRAFT') {
       await client.query('ROLLBACK');
       return { kind: 'not_confirmable' as const, status: challan.status };
@@ -292,6 +385,8 @@ export async function confirmChallan(id: number, confirmedBy: number) {
         };
       }
     }
+
+
 
     for (const item of itemsResult.rows) {
       await client.query(

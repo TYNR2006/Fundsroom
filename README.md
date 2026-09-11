@@ -41,3 +41,5 @@ New and edited challans remain `DRAFT`; draft operations do not change product s
 ## Challan confirmation
 
 `POST /api/challans/:id/confirm` is available to `ADMIN` and `SALES`. It locks the challan and all referenced product rows, validates every item before making changes, reduces stock, records `OUT` movements, and marks the challan `CONFIRMED` in one transaction. Any insufficient-stock or other failure rolls back all changes; confirmed and cancelled challans cannot be confirmed again.
+
+`POST /api/challans/:id/cancel` is available to `ADMIN` and `SALES` for draft challans. Only `ADMIN` can cancel a confirmed challan because that operation restores inventory. Draft cancellation changes only the status. Confirmed cancellation locks the challan and affected products, restores each exact item quantity, records matching `IN` movements, and marks the challan `CANCELLED` atomically. Cancelled challans cannot be cancelled, confirmed, or edited.

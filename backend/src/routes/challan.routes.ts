@@ -10,5 +10,6 @@ router.get('/:id', controller.get);
 router.post('/', requireRole('ADMIN', 'SALES'), controller.create);
 router.put('/:id', requireRole('ADMIN', 'SALES'), controller.update);
 router.post('/:id/confirm', requireRole('ADMIN', 'SALES'), controller.confirm);
+router.post('/:id/cancel', requireRole('ADMIN', 'SALES'), controller.cancel);
 
 export default router;

@@ -115,7 +115,10 @@ export async function update(request: Request, response: Response, next: NextFun
       return;
     }
     if (result.kind === 'not_editable') {
-      response.status(409).json({ success: false, message: 'Only draft challans can be updated' });
+      response.status(409).json({
+        success: false,
+        message: 'Cancelled or confirmed challans cannot be updated',
+      });
       return;
     }
     if (result.kind === 'customer_not_found') {
@@ -143,6 +146,7 @@ export async function confirm(request: Request, response: Response, next: NextFu
       response.status(400).json({ success: false, message: 'Invalid challan ID' });
       return;
     }
+
     const result = await service.confirmChallan(id, request.user!.userId);
     if (result.kind === 'challan_not_found') {
       response.status(404).json({ success: false, message: 'Sales challan not found' });
@@ -182,6 +186,54 @@ export async function confirm(request: Request, response: Response, next: NextFu
     response.json({
       success: true,
       message: 'Sales challan confirmed successfully',
+      data: result.challan,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function cancel(request: Request, response: Response, next: NextFunction) {
+  try {
+    const id = idOf(request);
+    if (!id) {
+      response.status(400).json({ success: false, message: 'Invalid challan ID' });
+      return;
+    }
+    const result = await service.cancelChallan(id, request.user!.userId, request.user!.role);
+    if (result.kind === 'challan_not_found') {
+      response.status(404).json({ success: false, message: 'Challan not found' });
+      return;
+    }
+    if (result.kind === 'already_cancelled') {
+      response.status(409).json({ success: false, message: 'Challan is already cancelled' });
+      return;
+    }
+    if (result.kind === 'invalid_state') {
+      response.status(409).json({
+        success: false,
+        message: `Challan cannot be cancelled from status ${result.status}`,
+      });
+      return;
+    }
+    if (result.kind === 'forbidden_confirmed') {
+      response.status(403).json({
+        success: false,
+        message: 'Only ADMIN can cancel a confirmed challan',
+      });
+      return;
+    }
+    if (result.kind === 'product_not_found') {
+      response.status(404).json({
+        success: false,
+        message: 'Product not found',
+        error: { productId: result.productId },
+      });
+      return;
+    }
+    response.json({
+      success: true,
+      message: 'Sales challan cancelled successfully',
       data: result.challan,
     });
   } catch (error) {
