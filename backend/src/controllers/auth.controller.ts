@@ -46,3 +46,11 @@ export function currentUser(request: Request, response: Response): void {
     data: request.user,
   });
 }
+
+export function adminOnly(request: Request, response: Response): void {
+  response.json({
+    success: true,
+    message: 'Admin authorization successful',
+    data: request.user,
+  });
+}
