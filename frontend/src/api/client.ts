@@ -10,7 +10,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
   if (token) headers.set('Authorization', `Bearer ${token}`);
   const response = await fetch(`${apiBaseUrl}${path}`, { ...options, headers });
-  const body = await response.json().catch(() => null) as { message?: string; data?: T } | null;
+  const body = await response.json().catch(() => null) as { message?: string; data?: T; pagination?: unknown } | null;
   if (!response.ok) { if (response.status === 401) onUnauthorized?.(); throw new ApiError(body?.message ?? 'Request failed', response.status); }
   if (body?.pagination && Array.isArray(body.data)) {
     return { rows: body.data, pagination: body.pagination } as T;
