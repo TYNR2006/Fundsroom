@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import { pool } from './config/db';
 import authRouter from './routes/auth.routes';
 import customerRouter from './routes/customer.routes';
+import productRouter from './routes/product.routes';
+import stockMovementRouter from './routes/stock-movement.routes';
 
 dotenv.config();
 
@@ -15,6 +17,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/customers', customerRouter);
+app.use('/api/products', productRouter);
+app.use('/api/stock-movements', stockMovementRouter);
 
 app.get('/api/health', (_request: Request, response: Response) => {
   response.json({

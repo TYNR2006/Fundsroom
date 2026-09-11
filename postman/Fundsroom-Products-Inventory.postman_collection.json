@@ -1,0 +1,119 @@
+{
+  "info": {
+    "name": "Fundsroom Products and Inventory",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"arjun.admin@fundsroom.test\",\"password\":\"Admin@123\"}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/products?page=1&limit=10"
+          }
+        },
+        {
+          "name": "Low-stock products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/products?lowStock=true"
+          }
+        },
+        {
+          "name": "Product details",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/products/1"
+          }
+        },
+        {
+          "name": "Create product",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"product_name\":\"Demo Product\",\"sku\":\"DEMO-001\",\"category\":\"Demo\",\"unit_price\":100,\"current_stock\":0,\"minimum_stock_quantity\":5,\"warehouse_location\":\"Pune Warehouse\"}"
+            },
+            "url": "{{baseUrl}}/api/products"
+          }
+        },
+        {
+          "name": "Add stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"quantity\":20,\"reason\":\"Purchase order received\"}"
+            },
+            "url": "{{baseUrl}}/api/products/1/stock/in"
+          }
+        },
+        {
+          "name": "Remove stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"quantity\":5,\"reason\":\"Damaged goods\"}"
+            },
+            "url": "{{baseUrl}}/api/products/1/stock/out"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stock movements",
+      "item": [
+        {
+          "name": "All movements",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/stock-movements?page=1&limit=10"
+          }
+        },
+        {
+          "name": "Product movements",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/products/1/stock-movements?page=1&limit=10"
+          }
+        }
+      ]
+    }
+  ]
+}
