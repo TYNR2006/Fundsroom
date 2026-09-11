@@ -166,6 +166,14 @@
             },
             "url": "{{baseUrl}}/api/challans/{{challanId}}"
           }
+        },
+        {
+          "name": "Confirm challan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/challans/{{challanId}}/confirm"
+          }
         }
       ]
     }

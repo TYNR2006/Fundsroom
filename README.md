@@ -36,4 +36,8 @@ All challan endpoints require `Authorization: Bearer <token>`.
 
 Create and update requests use `customerId` and an `items` array containing `productId` and positive integer `quantity`. Duplicate products in one challan are rejected. The backend loads current product data and stores name, SKU, unit-price, quantity, and line-total snapshots in `sales_challan_items`.
 
-New and edited challans remain `DRAFT`; draft operations do not change product stock or create stock movements. Creation and updates use PostgreSQL transactions so a challan cannot be left with partial items. Challan confirmation and inventory reduction are intentionally implemented in the next phase.
+New and edited challans remain `DRAFT`; draft operations do not change product stock or create stock movements. Creation and updates use PostgreSQL transactions so a challan cannot be left with partial items.
+
+## Challan confirmation
+
+`POST /api/challans/:id/confirm` is available to `ADMIN` and `SALES`. It locks the challan and all referenced product rows, validates every item before making changes, reduces stock, records `OUT` movements, and marks the challan `CONFIRMED` in one transaction. Any insufficient-stock or other failure rolls back all changes; confirmed and cancelled challans cannot be confirmed again.

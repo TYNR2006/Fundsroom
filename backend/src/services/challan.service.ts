@@ -223,3 +223,104 @@ export async function updateChallan(id: number, input: ChallanInput) {
     client.release();
   }
 }
+
+export async function confirmChallan(id: number, confirmedBy: number) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const challanResult = await client.query<{ id: number; status: string; challan_number: string }>(
+      `SELECT id, status, challan_number
+       FROM sales_challans
+       WHERE id = $1
+       FOR UPDATE`,
+      [id],
+    );
+    const challan = challanResult.rows[0];
+    if (!challan) {
+      await client.query('ROLLBACK');
+      return { kind: 'challan_not_found' as const };
+    }
+    if (challan.status !== 'DRAFT') {
+      await client.query('ROLLBACK');
+      return { kind: 'not_confirmable' as const, status: challan.status };
+    }
+
+    const itemsResult = await client.query<{
+      product_id: number;
+      quantity: number;
+    }>(
+      `SELECT product_id, quantity
+       FROM sales_challan_items
+       WHERE challan_id = $1
+       ORDER BY product_id
+       FOR UPDATE`,
+      [id],
+    );
+    if (!itemsResult.rows.length) {
+      await client.query('ROLLBACK');
+      return { kind: 'empty_challan' as const };
+    }
+
+    const productIds = itemsResult.rows.map((item) => item.product_id);
+    const productsResult = await client.query<{
+      id: number;
+      current_stock: number;
+    }>(
+      `SELECT id, current_stock
+       FROM products
+       WHERE id = ANY($1::INTEGER[])
+       ORDER BY id
+       FOR UPDATE`,
+      [productIds],
+    );
+    const productsById = new Map(productsResult.rows.map((product) => [product.id, product]));
+
+    for (const item of itemsResult.rows) {
+      const product = productsById.get(item.product_id);
+      if (!product) {
+        await client.query('ROLLBACK');
+        return { kind: 'product_not_found' as const, productId: item.product_id };
+      }
+      if (product.current_stock < item.quantity) {
+        await client.query('ROLLBACK');
+        return {
+          kind: 'insufficient_stock' as const,
+          productId: product.id,
+          available: product.current_stock,
+          requested: item.quantity,
+        };
+      }
+    }
+
+    for (const item of itemsResult.rows) {
+      await client.query(
+        `UPDATE products
+         SET current_stock = current_stock - $1,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2`,
+        [item.quantity, item.product_id],
+      );
+      await client.query(
+        `INSERT INTO stock_movements
+          (product_id, quantity_changed, movement_type, reason, created_by)
+         VALUES ($1, $2, 'OUT', $3, $4)`,
+        [item.product_id, item.quantity, `Sales challan ${challan.challan_number}`, confirmedBy],
+      );
+    }
+
+    await client.query(
+      `UPDATE sales_challans
+       SET status = 'CONFIRMED', updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1`,
+      [id],
+    );
+    await client.query('COMMIT');
+    return { kind: 'success' as const, challan: await getChallan(id) };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}

@@ -135,3 +135,56 @@ export async function update(request: Request, response: Response, next: NextFun
     next(error);
   }
 }
+
+export async function confirm(request: Request, response: Response, next: NextFunction) {
+  try {
+    const id = idOf(request);
+    if (!id) {
+      response.status(400).json({ success: false, message: 'Invalid challan ID' });
+      return;
+    }
+    const result = await service.confirmChallan(id, request.user!.userId);
+    if (result.kind === 'challan_not_found') {
+      response.status(404).json({ success: false, message: 'Sales challan not found' });
+      return;
+    }
+    if (result.kind === 'not_confirmable') {
+      response.status(409).json({
+        success: false,
+        message: `Only draft challans can be confirmed. Current status: ${result.status}`,
+      });
+      return;
+    }
+    if (result.kind === 'empty_challan') {
+      response.status(400).json({ success: false, message: 'Cannot confirm an empty challan' });
+      return;
+    }
+    if (result.kind === 'product_not_found') {
+      response.status(404).json({
+        success: false,
+        message: 'Product not found',
+        error: { productId: result.productId },
+      });
+      return;
+    }
+    if (result.kind === 'insufficient_stock') {
+      response.status(409).json({
+        success: false,
+        message: 'Insufficient stock',
+        error: {
+          productId: result.productId,
+          available: result.available,
+          requested: result.requested,
+        },
+      });
+      return;
+    }
+    response.json({
+      success: true,
+      message: 'Sales challan confirmed successfully',
+      data: result.challan,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
