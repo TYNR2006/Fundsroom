@@ -5,7 +5,10 @@
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:5000" },
-    { "key": "token", "value": "" }
+    { "key": "token", "value": "" },
+    { "key": "challanId", "value": "1" },
+    { "key": "customerId", "value": "1" },
+    { "key": "productId", "value": "1" }
   ],
   "item": [
     {
@@ -111,6 +114,57 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": "{{baseUrl}}/api/products/1/stock-movements?page=1&limit=10"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sales Challans",
+      "item": [
+        {
+          "name": "Create draft challan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"customerId\":1,\"items\":[{\"productId\":1,\"quantity\":2},{\"productId\":3,\"quantity\":3}]}"
+            },
+            "url": "{{baseUrl}}/api/challans"
+          }
+        },
+        {
+          "name": "List challans",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/challans?page=1&limit=10&status=DRAFT"
+          }
+        },
+        {
+          "name": "Challan details",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/challans/{{challanId}}"
+          }
+        },
+        {
+          "name": "Update draft challan",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"customerId\":1,\"items\":[{\"productId\":1,\"quantity\":4}]}"
+            },
+            "url": "{{baseUrl}}/api/challans/{{challanId}}"
           }
         }
       ]

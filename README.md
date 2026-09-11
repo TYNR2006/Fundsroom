@@ -22,3 +22,18 @@ All product and inventory endpoints require `Authorization: Bearer <token>`.
 Product listing supports `search`, `category`, `lowStock=true`, `page`, and `limit`.
 Stock operations require a positive integer `quantity` and a non-empty `reason`.
 Stock changes lock the product row and update `products` and `stock_movements` in one PostgreSQL transaction. Failed stock removals leave both unchanged.
+
+## Sales challan draft APIs
+
+All challan endpoints require `Authorization: Bearer <token>`.
+
+| Method | Endpoint | Access |
+|---|---|---|
+| GET | `/api/challans` | All authenticated roles |
+| GET | `/api/challans/:id` | All authenticated roles |
+| POST | `/api/challans` | ADMIN, SALES |
+| PUT | `/api/challans/:id` | ADMIN, SALES |
+
+Create and update requests use `customerId` and an `items` array containing `productId` and positive integer `quantity`. Duplicate products in one challan are rejected. The backend loads current product data and stores name, SKU, unit-price, quantity, and line-total snapshots in `sales_challan_items`.
+
+New and edited challans remain `DRAFT`; draft operations do not change product stock or create stock movements. Creation and updates use PostgreSQL transactions so a challan cannot be left with partial items. Challan confirmation and inventory reduction are intentionally implemented in the next phase.
