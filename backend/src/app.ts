@@ -1,4 +1,4 @@
-﻿import cors from 'cors';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
@@ -9,6 +9,7 @@ import productRouter from './routes/product.routes';
 import stockMovementRouter from './routes/stock-movement.routes';
 import challanRouter from './routes/challan.routes';
 import dashboardRouter from './routes/dashboard.routes';
+import userRouter from './routes/user.routes';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use('/api/products', productRouter);
 app.use('/api/stock-movements', stockMovementRouter);
 app.use('/api/challans', challanRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/users', userRouter);
 
 app.get('/api/health', (_request: Request, response: Response) => {
   response.json({
@@ -65,3 +67,4 @@ app.use((error: Error, _request: Request, response: Response, _next: NextFunctio
 });
 
 export default app;
+
