@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import express, { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import { pool } from './config/db';
+import authRouter from './routes/auth.routes';
 
 dotenv.config();
 
@@ -11,6 +12,7 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use('/api/auth', authRouter);
 
 app.get('/api/health', (_request: Request, response: Response) => {
   response.json({

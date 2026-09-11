@@ -1,0 +1,16 @@
+export type AuthenticatedUser = {
+  userId: number;
+  name: string;
+  email: string;
+  role: string;
+};
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthenticatedUser;
+    }
+  }
+}
+
+export {};
