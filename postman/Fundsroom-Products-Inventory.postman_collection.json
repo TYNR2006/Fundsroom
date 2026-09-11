@@ -184,6 +184,51 @@
           }
         }
       ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Dashboard summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": "{{baseUrl}}/api/dashboard/summary"
+          }
+        },
+        {
+          "name": "Inventory dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": "{{baseUrl}}/api/dashboard/inventory"
+          }
+        },
+        {
+          "name": "Challan dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": "{{baseUrl}}/api/dashboard/challans"
+          }
+        },
+        {
+          "name": "Recent dashboard activity",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": "{{baseUrl}}/api/dashboard/activity"
+          }
+        },
+        {
+          "name": "Filtered dashboard activity",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "******" }],
+            "url": "{{baseUrl}}/api/dashboard/activity?from=2026-09-01&to=2026-09-11"
+          }
+        }
+      ]
     }
   ]
 }

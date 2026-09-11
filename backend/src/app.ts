@@ -8,6 +8,7 @@ import customerRouter from './routes/customer.routes';
 import productRouter from './routes/product.routes';
 import stockMovementRouter from './routes/stock-movement.routes';
 import challanRouter from './routes/challan.routes';
+import dashboardRouter from './routes/dashboard.routes';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use('/api/customers', customerRouter);
 app.use('/api/products', productRouter);
 app.use('/api/stock-movements', stockMovementRouter);
 app.use('/api/challans', challanRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 app.get('/api/health', (_request: Request, response: Response) => {
   response.json({
